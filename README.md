@@ -1,56 +1,40 @@
-# Welcome to your Expo app 👋
+# StockPilot
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+StockPilot is an Android-first, iOS-compatible inventory and sales app for small retailers. It is designed to keep core records available when mobile data is unreliable. The current M0 build is a navigation and design-system foundation; product, inventory, sales, authentication, and synchronization behavior are not implemented yet.
 
-## Get started
+## Requirements
 
-1. Install dependencies
+- Node.js 22.13 or newer
+- npm
+- Android Studio emulator or an Android device with Expo Go compatible with SDK 57
 
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **src/app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Install and run
 
 ```bash
-npm run reset-project
+npm ci
+npx expo start
 ```
 
-This command will move the starter code to the **example** directory and create a blank **src/app** directory where you can start developing.
+To open on Android, start an Android emulator before running the command and press `a` in the Expo terminal. For a physical device, install the SDK 57-compatible Expo Go app, connect the phone and computer to the same network, scan the QR code, and allow local network access. If a future native dependency is not included in Expo Go, use a development build instead.
 
-### Other setup steps
+## Verification
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+```bash
+npm run lint
+npm run typecheck
+npm run format:check
+npm test
+npx expo-doctor
+```
 
-## Learn more
+## Project structure
 
-To learn more about developing your project with Expo, look at the following resources:
+- `src/app/` contains Expo Router routes and layouts.
+- `src/features/` contains feature-owned presentation, application, and domain code when a feature is implemented.
+- `src/shared/ui/` contains reusable accessible components.
+- `src/shared/domain/` contains pure shared domain rules.
+- `src/shared/infrastructure/db/` contains SQLite initialization and ordered migrations.
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+On Android and iOS, the SQLite database opens during app initialization, enables WAL and foreign keys, and reads the migration version. The M0 migration registry is intentionally empty: domain tables are added with M1 as additive, versioned migrations. Do not use destructive migrations to discard local records. Web currently renders the shell without opening SQLite; Expo SQLite web support remains experimental and needs separate headers/WASM setup before enabling persistence there.
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+See [the architecture](docs/ARCHITECTURE.md), [product requirements](docs/PRODUCT_REQUIREMENTS.md), [roadmap](docs/ROADMAP.md), and [ADR-005](docs/decisions/ADR-005-expo-sdk-nativewind.md).

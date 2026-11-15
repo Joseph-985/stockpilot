@@ -6,6 +6,10 @@ node_modules/
 # Expo
 .expo/
 dist/
+coverage/
+*.db
+*.db-shm
+*.db-wal
 web-build/
 expo-env.d.ts
 
