@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react-native';
 
-import { TextField } from './TextField';
+import { TextField } from '../../../shared/ui/TextField';
 
 describe('TextField', () => {
   it('provides an accessible name and error message', () => {

@@ -1,4 +1,4 @@
-import { getPendingMigrations, type DatabaseMigration } from './types';
+import { getPendingMigrations, type DatabaseMigration } from '../../../../shared/infrastructure/db/migrations/types';
 
 const migration = (version: number): DatabaseMigration => ({
   version,

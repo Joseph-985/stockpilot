@@ -1,4 +1,4 @@
-import { formatMinorCurrency } from './money';
+import { formatMinorCurrency } from '../../shared/domain/money';
 
 describe('formatMinorCurrency', () => {
   it('formats integer kobo as NGN with two decimal places', () => {

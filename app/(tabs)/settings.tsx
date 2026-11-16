@@ -1,6 +1,6 @@
 import { FeaturePlaceholder } from '@/shared/ui/FeaturePlaceholder';
 
-export function SettingsScreen() {
+export default function SettingsRoute() {
   return (
     <FeaturePlaceholder
       title="Settings"

@@ -1,6 +1,6 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
 
-import { Button } from './Button';
+import { Button } from '../../../shared/ui/Button';
 
 describe('Button', () => {
   it('exposes its label and invokes its action', () => {

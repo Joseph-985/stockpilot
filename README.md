@@ -29,11 +29,12 @@ npx expo-doctor
 
 ## Project structure
 
-- `src/app/` contains Expo Router routes and layouts.
+- `app/` contains Expo Router routes and layouts, alongside `src/` at the project root.
 - `src/features/` contains feature-owned presentation, application, and domain code when a feature is implemented.
 - `src/shared/ui/` contains reusable accessible components.
 - `src/shared/domain/` contains pure shared domain rules.
 - `src/shared/infrastructure/db/` contains SQLite initialization and ordered migrations.
+- `src/test/` contains domain, shared UI, and infrastructure tests, grouped by the code they cover.
 
 On Android and iOS, the SQLite database opens during app initialization, enables WAL and foreign keys, and reads the migration version. The M0 migration registry is intentionally empty: domain tables are added with M1 as additive, versioned migrations. Do not use destructive migrations to discard local records. Web currently renders the shell without opening SQLite; Expo SQLite web support remains experimental and needs separate headers/WASM setup before enabling persistence there.
 

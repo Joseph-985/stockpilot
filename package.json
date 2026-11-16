@@ -53,8 +53,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write \"src/app/**/*.{ts,tsx}\" \"src/features/**/*.{ts,tsx}\" \"src/shared/**/*.{ts,tsx}\" \"*.{js,json}\" README.md \"docs/decisions/*.md\" \".github/**/*.yml\"",
-    "format:check": "prettier --check \"src/app/**/*.{ts,tsx}\" \"src/features/**/*.{ts,tsx}\" \"src/shared/**/*.{ts,tsx}\" \"*.{js,json}\" README.md \"docs/decisions/*.md\" \".github/**/*.yml\"",
+    "format": "prettier --write \"app/**/*.{ts,tsx}\" \"src/features/**/*.{ts,tsx}\" \"src/shared/**/*.{ts,tsx}\" \"*.{js,json}\" README.md \"docs/decisions/*.md\" \".github/**/*.yml\"",
+    "format:check": "prettier --check \"app/**/*.{ts,tsx}\" \"src/features/**/*.{ts,tsx}\" \"src/shared/**/*.{ts,tsx}\" \"*.{js,json}\" README.md \"docs/decisions/*.md\" \".github/**/*.yml\"",
     "test": "jest --runInBand"
   },
   "private": true
