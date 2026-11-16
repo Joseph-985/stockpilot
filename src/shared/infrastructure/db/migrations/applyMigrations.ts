@@ -1,13 +1,13 @@
-import type { SQLiteDatabase } from 'expo-sqlite';
+import type { SQLiteConnection } from '../SQLiteConnection';
 
 import { migrations } from './index';
 import { getPendingMigrations, type DatabaseMigration } from './types';
 
 export async function applyMigrations(
-  database: SQLiteDatabase,
+  database: SQLiteConnection,
   registeredMigrations: readonly DatabaseMigration[] = migrations,
 ): Promise<void> {
-  const row = await database.getFirstAsync<{ user_version: number }>('PRAGMA user_version');
+  const row = await database.getFirstAsync<{ user_version: number }>('PRAGMA user_version', []);
   const currentVersion = row?.user_version ?? 0;
   const pending = getPendingMigrations(currentVersion, registeredMigrations);
 

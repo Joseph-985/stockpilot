@@ -6,6 +6,7 @@
     "@expo/ui": "~57.0.26",
     "expo": "~57.0.0",
     "expo-constants": "~57.0.24",
+    "expo-crypto": "~57.0.4",
     "expo-device": "~57.0.2",
     "expo-font": "~57.0.4",
     "expo-glass-effect": "~57.0.5",
@@ -27,11 +28,13 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-web": "~0.21.4",
-    "react-native-worklets": "0.10.1"
+    "react-native-worklets": "0.10.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@testing-library/react-native": "^13.3.3",
     "@types/jest": "29.5.14",
+    "@types/node": "^26.6.6",
     "@types/react": "~19.2.4",
     "eslint": "^9.39.5",
     "eslint-config-expo": "~57.0.2",
@@ -53,8 +56,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
-    "format": "prettier --write \"app/**/*.{ts,tsx}\" \"src/features/**/*.{ts,tsx}\" \"src/shared/**/*.{ts,tsx}\" \"*.{js,json}\" README.md \"docs/decisions/*.md\" \".github/**/*.yml\"",
-    "format:check": "prettier --check \"app/**/*.{ts,tsx}\" \"src/features/**/*.{ts,tsx}\" \"src/shared/**/*.{ts,tsx}\" \"*.{js,json}\" README.md \"docs/decisions/*.md\" \".github/**/*.yml\"",
+    "format": "prettier --write \"app/**/*.{ts,tsx}\" \"src/features/**/*.{ts,tsx}\" \"src/shared/**/*.{ts,tsx}\" \"src/test/**/*.{ts,tsx}\" \"*.{js,json}\" README.md \"docs/decisions/*.md\" \".github/**/*.yml\"",
+    "format:check": "prettier --check \"app/**/*.{ts,tsx}\" \"src/features/**/*.{ts,tsx}\" \"src/shared/**/*.{ts,tsx}\" \"src/test/**/*.{ts,tsx}\" \"*.{js,json}\" README.md \"docs/decisions/*.md\" \".github/**/*.yml\"",
     "test": "jest --runInBand"
   },
   "private": true

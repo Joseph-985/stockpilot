@@ -69,28 +69,30 @@ All IDs are UUIDs (client-generated for offline operations). Each tenant-scoped 
 
 ### Server PostgreSQL
 
-| Table | Principal fields | Notes |
-|---|---|---|
-| `stores` | id, name, currency | One store in MVP |
-| `store_members` | store_id, user_id, role, status | Owner/staff authorization |
-| `products` | id, store_id, sku, name, price_minor, version, deleted_at | Unique store SKU; soft deletion |
-| `stock_balances` | store_id, product_id, quantity, version | Fast authoritative available quantity |
-| `stock_movements` | id, store_id, product_id, delta_quantity, reason, source_command_id | Append-only audit trail |
-| `sales` | id, store_id, created_by, total_minor, occurred_at, status | Immutable on confirmation |
-| `sale_items` | sale_id, product_id, quantity, unit_price_minor, line_total_minor | Historical snapshots |
-| `processed_commands` | store_id, command_id, result_json, outcome | Unique idempotency key |
-| `sync_clock` | store_id, revision | Monotonic commit-ordered store counter, locked during write |
-| `change_log` | store_id, revision, entity_type, entity_id, operation, payload | Server delta-feed cursor |
+| Table                | Principal fields                                                    | Notes                                                       |
+| -------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `stores`             | id, name, currency                                                  | One store in MVP                                            |
+| `store_members`      | store_id, user_id, role, status                                     | Owner/staff authorization                                   |
+| `products`           | id, store_id, sku, name, price_minor, version, deleted_at           | Unique store SKU; soft deletion                             |
+| `stock_balances`     | store_id, product_id, quantity, version                             | Fast authoritative available quantity                       |
+| `stock_movements`    | id, store_id, product_id, delta_quantity, reason, source_command_id | Append-only audit trail                                     |
+| `sales`              | id, store_id, created_by, total_minor, occurred_at, status          | Immutable on confirmation                                   |
+| `sale_items`         | sale_id, product_id, quantity, unit_price_minor, line_total_minor   | Historical snapshots                                        |
+| `processed_commands` | store_id, command_id, result_json, outcome                          | Unique idempotency key                                      |
+| `sync_clock`         | store_id, revision                                                  | Monotonic commit-ordered store counter, locked during write |
+| `change_log`         | store_id, revision, entity_type, entity_id, operation, payload      | Server delta-feed cursor                                    |
 
 **Revision correctness:** Do not rely solely on PostgreSQL `BIGSERIAL` arrival order for delta sync; concurrent transactions can commit out of order. Allocate revisions under a per-store `sync_clock` row lock in the same transaction as domain writes. If one transaction changes multiple rows, use an ordered batch/change envelope or a sub-sequence within the revision, with cursor semantics carefully specified.
 
 ### Local SQLite
 
-- `local_products`, `local_stock_balances`, `local_sales`, `local_sale_items`, `local_stock_movements`: read models and provisional local entities
-- `outbox_commands`: command_id, store_id, type, payload_json, expected_version, created_at, status, attempts, next_attempt_at, last_error
+- `local_store_identity`: persistent store ID, identity kind, active marker, and creation time. M1's `local_demo` identity is local-only and is not an authenticated cloud tenant.
+- `local_products`: product read model and provisional product state. M1 stores Unicode-normalized `name_search` and `sku_search` text for case-insensitive local matching; migration 2 backfills these fields additively.
+- `local_stock_balances`, `local_sales`, `local_sale_items`, `local_stock_movements`: later read models and provisional local entities
+- `outbox_commands`: local_sequence, command_id, store_id, type, entity_id, immutable payload_json, expected_server_version, depends_on_command_id, status, attempts, next_attempt_at, last_error, created_at
 - `sync_state`: store_id, server_cursor, last_success_at, bootstrap_completed_at
 - `sync_conflicts`: command_id, code, server_snapshot_json, local_payload_json, resolution_state
-- `schema_migrations`: migration version
+- Schema version is tracked with SQLite `PRAGMA user_version` by the app's versioned migration runner; keep one authoritative migration ledger.
 
 Indexes on `store_id`, product SKU/name, sale occurred_at, pending outbox status and `(store_id, revision)` change-feed queries. Add local `sync_status` as a visible read-model attribute.
 
@@ -153,14 +155,14 @@ Sync on app launch, foreground/resume, connectivity recovery, manual user action
 
 ## Conflict policy
 
-| Conflict | MVP policy |
-|---|---|
-| Duplicate submission | Return original outcome; do not apply twice |
-| Concurrent sale of last unit | First valid committed sale wins; later command rejected, visible `Needs attention` |
-| Product edited on two devices | Version check; reject stale update; show both values and allow user to resubmit |
-| Product deleted while offline | Reject references as appropriate; retain local command and resolution path |
-| Membership revoked offline | Local records remain provisional; server refuses writes; lock/clear per privacy policy after verified revocation |
-| Network timeout after server success | Retry exact command ID; server responds with original result |
+| Conflict                             | MVP policy                                                                                                       |
+| ------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| Duplicate submission                 | Return original outcome; do not apply twice                                                                      |
+| Concurrent sale of last unit         | First valid committed sale wins; later command rejected, visible `Needs attention`                               |
+| Product edited on two devices        | Version check; reject stale update; show both values and allow user to resubmit                                  |
+| Product deleted while offline        | Reject references as appropriate; retain local command and resolution path                                       |
+| Membership revoked offline           | Local records remain provisional; server refuses writes; lock/clear per privacy policy after verified revocation |
+| Network timeout after server success | Retry exact command ID; server responds with original result                                                     |
 
 ## Security and privacy
 
