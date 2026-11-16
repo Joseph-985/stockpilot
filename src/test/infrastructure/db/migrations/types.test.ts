@@ -1,4 +1,7 @@
-import { getPendingMigrations, type DatabaseMigration } from '../../../../shared/infrastructure/db/migrations/types';
+import {
+  getPendingMigrations,
+  type DatabaseMigration,
+} from '../../../../shared/infrastructure/db/migrations/types';
 
 const migration = (version: number): DatabaseMigration => ({
   version,
@@ -23,6 +26,12 @@ describe('getPendingMigrations', () => {
   it('rejects gaps in the migration history', () => {
     expect(() => getPendingMigrations(0, [migration(1), migration(3)])).toThrow(
       'Missing database migration version: 2',
+    );
+  });
+
+  it('rejects a database version newer than the installed migration set', () => {
+    expect(() => getPendingMigrations(2, [migration(1)])).toThrow(
+      'Database schema version 2 is newer than the supported version 1.',
     );
   });
 });

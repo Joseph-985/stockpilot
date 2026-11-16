@@ -8,9 +8,11 @@
     "scheme": "stockpilot",
     "userInterfaceStyle": "light",
     "ios": {
+      "bundleIdentifier": "com.stockpilot.mobile",
       "icon": "./assets/expo.icon"
     },
     "android": {
+      "package": "com.stockpilot.mobile",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",

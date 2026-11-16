@@ -1,4 +1,10 @@
 import type { DatabaseMigration } from './types';
+import { productCatalogMigration } from './productCatalog';
+import { productSearchNormalizationMigration } from './productSearchNormalization';
+import { localStoreIdentityCurrentMigration } from './localStoreIdentityCurrent';
 
-/** Add-only, monotonically versioned SQLite migrations are introduced with M1 features. */
-export const migrations: readonly DatabaseMigration[] = [];
+export const migrations: readonly DatabaseMigration[] = [
+  productCatalogMigration,
+  productSearchNormalizationMigration,
+  localStoreIdentityCurrentMigration,
+];
