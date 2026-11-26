@@ -310,13 +310,14 @@ export class SQLiteProductRepository implements ProductRepository {
 
     await this.database.runAsync(
       `INSERT INTO outbox_commands (
-        command_id, store_id, type, entity_id, payload_json, expected_server_version,
+        command_id, store_id, type, entity_id, product_id, payload_json, expected_server_version,
         depends_on_command_id, status, attempts, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?);`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0, ?);`,
       [
         commandId,
         product.storeId,
         type,
+        product.id,
         product.id,
         JSON.stringify(payload),
         expectedServerVersion,

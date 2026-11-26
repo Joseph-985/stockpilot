@@ -3,6 +3,8 @@ import type { SQLiteConnection } from '../SQLiteConnection';
 export type DatabaseMigration = {
   version: number;
   name: string;
+  /** This migration must run with FK checks disabled before its transaction starts. */
+  requiresForeignKeysDisabled?: boolean;
   up: (database: SQLiteConnection) => Promise<void>;
 };
 

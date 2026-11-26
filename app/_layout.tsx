@@ -8,12 +8,16 @@ import { Platform } from 'react-native';
 
 import { ProductServicesProvider } from '@/features/products/presentation/ProductServicesContext';
 import type { ProductServices } from '@/features/products/presentation/ProductServicesContext';
+import { InventoryServicesProvider } from '@/features/inventory/presentation/InventoryServicesContext';
+import { SalesServicesProvider } from '@/features/sales/presentation/SalesServicesContext';
 import { ErrorState } from '@/shared/ui/ErrorState';
 import { LoadingIndicator } from '@/shared/ui/LoadingIndicator';
 import { Screen } from '@/shared/ui/Screen';
 import { getLocalDemoStoreIdentity } from '@/shared/infrastructure/db/localStoreIdentity';
 import { initializeDatabase } from '@/shared/infrastructure/db/initializeDatabase';
 import { SQLiteProductRepository } from '@/shared/infrastructure/db/repositories/SQLiteProductRepository';
+import { SQLiteInventoryRepository } from '@/shared/infrastructure/db/repositories/SQLiteInventoryRepository';
+import { SQLiteSaleRepository } from '@/shared/infrastructure/db/repositories/SQLiteSaleRepository';
 
 function AppRoutes() {
   return (
@@ -23,6 +27,11 @@ function AppRoutes() {
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="products/new" />
         <Stack.Screen name="products/[id]/edit" />
+        <Stack.Screen name="inventory/stock-in" />
+        <Stack.Screen name="inventory/adjust" />
+        <Stack.Screen name="inventory/[productId]" />
+        <Stack.Screen name="sale/new" />
+        <Stack.Screen name="sale/[id]" />
       </Stack>
     </>
   );
@@ -31,6 +40,8 @@ function AppRoutes() {
 function DatabaseApp() {
   const database = useSQLiteContext();
   const repository = useMemo(() => new SQLiteProductRepository(database), [database]);
+  const inventoryRepository = useMemo(() => new SQLiteInventoryRepository(database), [database]);
+  const saleRepository = useMemo(() => new SQLiteSaleRepository(database), [database]);
   const [services, setServices] = useState<ProductServices | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [retryKey, setRetryKey] = useState(0);
@@ -48,7 +59,7 @@ function DatabaseApp() {
     return () => {
       isActive = false;
     };
-  }, [database, repository, retryKey]);
+  }, [database, inventoryRepository, repository, retryKey]);
 
   if (!services) {
     return (
@@ -71,7 +82,13 @@ function DatabaseApp() {
 
   return (
     <ProductServicesProvider services={services}>
-      <AppRoutes />
+      <InventoryServicesProvider
+        services={{ repository: inventoryRepository, storeId: services.storeId }}
+      >
+        <SalesServicesProvider services={{ repository: saleRepository, storeId: services.storeId }}>
+          <AppRoutes />
+        </SalesServicesProvider>
+      </InventoryServicesProvider>
     </ProductServicesProvider>
   );
 }

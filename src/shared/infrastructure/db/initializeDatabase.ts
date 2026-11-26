@@ -17,4 +17,14 @@ export async function initializeDatabase(database: SQLiteConnection): Promise<vo
 
   await applyMigrations(database);
   await ensureLocalDemoStoreIdentity(database);
+
+  await database.withTransactionAsync(async () => {
+    const transactionForeignKeys = await database.getFirstAsync<{ foreign_keys: number }>(
+      'PRAGMA foreign_keys;',
+      [],
+    );
+    if (transactionForeignKeys?.foreign_keys !== 1) {
+      throw new Error('SQLite foreign keys are not enabled in the write transaction.');
+    }
+  });
 }

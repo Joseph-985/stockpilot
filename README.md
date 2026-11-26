@@ -1,31 +1,49 @@
 # StockPilot
 
-StockPilot is an Android-first, iOS-compatible inventory and sales application for small retailers. M1 delivers a local-only product catalog backed by SQLite. There is no sign-in, cloud tenant, network synchronization, inventory quantity, or sales behavior yet.
+StockPilot is an Android-first, iOS-compatible offline inventory and sales app for small retailers. M2 provides a local product catalog, inventory ledger, provisional sales, and a SQLite outbox. There is no sign-in, backend, network synchronization, or payment processing.
 
 ## Requirements and setup
 
-- Node.js 22.13 or newer
-- npm
-- Android Studio and Android SDK for local Android builds, or an Android device
-
-Install and start the app:
+- Node.js 22.13 or newer and npm
+- Android Studio/Android SDK for local Android builds, or an Android device
 
 ```bash
 npm ci
 npx expo start
 ```
 
-For a connected Android emulator, press `a` in the Expo terminal. A physical Android device can scan the development QR code while the phone and computer are on the same network. Expo Go is useful for interactive development; use a standalone Android build for force-stop/relaunch testing because the development server is not available after disconnecting the device.
-
-For a standalone local Android release build (requires the Android SDK):
+For a connected emulator press `a` in the Expo terminal. A physical device can scan the development QR code on the same network. Use a standalone Android build for force-stop testing when Metro is unavailable:
 
 ```bash
 npx expo run:android --variant release
 ```
 
-Expo generates the native Android project through Continuous Native Generation. Do not hand-edit generated `android/` or `ios/` files. The configured Android application ID is `com.stockpilot.mobile`.
+Expo generates native projects through Continuous Native Generation. Do not edit generated `android/` or `ios/` directories by hand. The configured Android application ID is `com.stockpilot.mobile`.
 
-## Verification
+## M2 local demo
+
+1. In **Products**, create a fictional product (for example SKU `TEE-001`, name `Basic Cotton Top`, price `3500.00`, threshold `3`). Product create/edit/archive commands remain in the same ordered outbox as M1.
+2. In **Inventory**, open the product, record stock-in, adjust stock with a reason, and inspect its movement history. Availability is an estimate on this device.
+3. In **Sales**, choose products, adjust quantities, review the integer-kobo total and optional customer name, select the cash/transfer/other payment label, then save. A success message appears only after the local SQLite transaction commits.
+4. Open **Sales** history and a sale detail to review pending status and the saved name/SKU/price snapshots. The Dashboard shows today's local provisional total and low-stock summary.
+5. Follow [the Android airplane-mode and force-stop runbook](docs/testing/M2_ANDROID_RUNBOOK.md). Device execution has not been recorded by this repository yet.
+
+All M2 sales and inventory changes are local and provisional. `Pending sync` means queued on this device; it does not mean backed up. Data may be lost if app storage is wiped or the app is uninstalled before future synchronization. Two disconnected devices can disagree about stock. Payment method is a label and does not process or confirm payment. M2 has no conflict resolution, refunds, receipts, or server validation.
+
+## Routes and architecture
+
+- `app/(tabs)/index.tsx`: Dashboard, local daily sales totals and low-stock summary.
+- `app/(tabs)/products.tsx`, `app/products/new.tsx`, `app/products/[id]/edit.tsx`: product catalog and edits.
+- `app/(tabs)/inventory.tsx`, `app/inventory/[productId].tsx`, `app/inventory/stock-in.tsx`, `app/inventory/adjust.tsx`: estimated balances, stock mutations, movement history, and links from sale movements to sale details.
+- `app/(tabs)/sales.tsx`, `app/sale/new.tsx`, `app/sale/[id].tsx`: product picker/cart/checkout, local sales list, and immutable snapshot detail.
+- `src/features/{products,inventory,sales}/`: feature contracts, use cases, repositories, and presentation. SQLite is the read source for committed records; the active cart is ephemeral component state.
+- `src/shared/infrastructure/db/`: Expo SQLite initialization, serialized repository writes, and additive migrations. M1 product commands remain ordered; a sale emits one `sale.create` command with snapshot lines, not per-line `inventory.adjust` commands.
+
+Implementation decisions adapted from [M2 decisions](docs/M2_DECISIONS.md): immutable stock movements plus a cached `base_quantity + pending_delta` estimate; one command per sale; integer-kobo snapshots and re-review after a price change; serialized local writes and local stock rejection; stable checkout request IDs for retry idempotency; preserving outbox migration. Migration 6 adds database triggers that prevent edits/deletes of sale item and movement history and protects sale snapshots while allowing only forward pending-status transitions reserved for later sync.
+
+## Scripts and verification
+
+Available `package.json` scripts:
 
 ```bash
 npm run lint
@@ -33,38 +51,12 @@ npm run typecheck
 npm run format:check
 npm test
 npx expo install --check
-npx expo-doctor
 ```
 
-## M1 scope and architecture
+Expo SDK is 57 (`expo ~57.0.0`); use its versioned documentation when changing Expo APIs. M2 integration tests use real file-backed SQLite through Node's `node:sqlite`; they do not exercise Expo's native SQLite bridge. See the Android runbook for device verification steps and the [M2 test matrix](docs/M2_TEST_MATRIX.md) for coverage expectations.
 
-- `app/` contains Expo Router routes and navigation; `src/features/products/` owns product presentation, application use cases, and domain contracts.
-- `src/shared/ui/` contains reusable accessible controls; `src/shared/domain/` contains pure money helpers.
-- `src/shared/infrastructure/db/` initializes SQLite and applies additive migrations tracked by `PRAGMA user_version`.
-- SQLite is the product list's read source. The UI does not keep an independently authoritative product cache.
-- `local_store_identity` stores one durable `local_demo` UUID. It is not authenticated and must not be treated as a cloud tenant or automatically uploaded.
-- Product create, update, and archive each write the product row and one immutable outbox command in a single SQLite transaction. Archived rows stay in the database and are excluded from normal product queries.
-- Prices are stored as integer kobo. Pending means queued locally; M1 does not send or synchronize commands.
-- Migrations 1 and 2 create the catalog/outbox and add Unicode-normalized local search fields. Migration 2 backfills existing rows without replacing product records.
+## M3 handoff
 
-See [Architecture](docs/ARCHITECTURE.md), [Product requirements](docs/PRODUCT_REQUIREMENTS.md), [M1 implementation specification](docs/M1_IMPLEMENTATION_SPEC.md), and the [M1 test matrix](docs/M1_TEST_MATRIX.md). Decisions: [ADR-001](docs/decisions/ADR-001-sqlite-local-first.md), [ADR-002](docs/decisions/ADR-002-atomic-product-outbox.md), and [ADR-005](docs/decisions/ADR-005-expo-sdk-nativewind.md).
+M3 should add the authoritative PostgreSQL/Supabase schema and secure command executor without changing M2's local command intent or snapshots. The server must authorize store membership, validate active products/prices and stock atomically, and deduplicate the stable command ID. M4 must reconcile acknowledged local movements against the authoritative stock baseline without counting a movement twice. No server or sync path exists in this M2 implementation.
 
-## Manual Android airplane-mode test
-
-Use a standalone release build so the app can relaunch without Metro or internet. The app has no online sign-in or sync path in M1.
-
-1. Build and install on an Android emulator or physical device with `npx expo run:android --variant release`. Record the build commit, device/emulator model, and Android version before testing.
-2. Open StockPilot once and wait for the local database to initialize. Turn on airplane mode and confirm Wi-Fi and mobile data are off.
-3. Open **Products**, tap **Add product**, and enter SKU `TEE-001`, name `Basic Cotton Top`, selling price `3500.00`, and threshold `3`. Save. Confirm the row shows `NGN 3,500.00` and `Pending sync`.
-4. Search for `tee-001`, clear the search, then search for `Cotton`. Confirm each query finds the product. Try an existing SKU with different letter case and confirm the form shows a validation error without adding a second product.
-5. Edit the product price to `3800.00`. Save and confirm the list shows `NGN 3,800.00` and `Pending sync`.
-6. Leave airplane mode on. In Android Settings, force-stop StockPilot, then relaunch it from the app icon. Confirm the product, edited price, and pending badge remain.
-7. Tap **Archive**, cancel once and verify the product remains. Tap **Archive** again and confirm. Verify it disappears from the normal list and search results.
-8. The automated file-backed SQLite test closes and reopens the same database file and verifies the demo-store ID, product row (including archived state), ordered outbox rows, and original command IDs. Use that as the M1 outbox inspection harness; no diagnostic screen is shipped.
-9. Re-enable connectivity. Confirm the product remains pending. M1 has no sync transport, so no command should be sent or marked synced.
-
-Record each step as pass/fail and include any device-specific notes. Do not report Android/device acceptance as passed until this procedure has actually run on an Android device or emulator. Node's file-backed SQLite tests prove persistence and transaction behavior in the test runtime, but do not exercise Expo's native SQLite bridge.
-
-## M2 handoff
-
-M2 may add quantity, stock movements, inventory rules, and sale entities with their own domain contracts, migrations, and atomic outbox commands. Keep product records and their queued commands intact. Do not coalesce or rewrite M1 command payloads while adding later command types; preserve dependency order and keep the `local_demo` identity distinct until an explicit authenticated-store adoption flow is designed.
+See [Architecture](docs/ARCHITECTURE.md), [Product requirements](docs/PRODUCT_REQUIREMENTS.md), [M2 implementation specification](docs/M2_IMPLEMENTATION_SPEC.md), [M2 data contracts](docs/M2_DATA_CONTRACTS.md), and [M2 test matrix](docs/M2_TEST_MATRIX.md). Foundation decisions: [ADR-001](docs/decisions/ADR-001-sqlite-local-first.md), [ADR-002](docs/decisions/ADR-002-atomic-product-outbox.md), [ADR-005](docs/decisions/ADR-005-expo-sdk-nativewind.md), and [ADR-M2](docs/decisions/ADR-M2-local-sales-inventory.md).
