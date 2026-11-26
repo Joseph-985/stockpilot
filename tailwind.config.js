@@ -18,6 +18,9 @@ module.exports = {
         border: '#d9dee8',
         danger: '#b42318',
         dangerSurface: '#fef3f2',
+        warning: '#b54708',
+        warningSurface: '#fffaeb',
+        successSurface: '#ecfdf3',
       },
       spacing: {
         0.5: '2px',

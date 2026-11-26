@@ -88,9 +88,9 @@ export function ProductsList({
               <View
                 accessible
                 accessibilityLabel="Pending sync"
-                className="bg-warningSurface rounded-full px-3 py-1"
+                className="rounded-full bg-warningSurface px-3 py-1"
               >
-                <Text className="text-warning text-xs font-semibold">Pending sync</Text>
+                <Text className="text-xs font-semibold text-warning">Pending sync</Text>
               </View>
             ) : null}
           </View>

@@ -3,6 +3,7 @@ import { Tabs } from 'expo-router';
 const routes = [
   { name: 'index', label: 'Dashboard' },
   { name: 'products', label: 'Products' },
+  { name: 'inventory', label: 'Inventory' },
   { name: 'sales', label: 'Sales' },
   { name: 'settings', label: 'Settings' },
 ] as const;
@@ -22,7 +23,11 @@ export default function TabLayout() {
         <Tabs.Screen
           key={name}
           name={name}
-          options={{ title: label, tabBarLabel: label, tabBarAccessibilityLabel: `${label} tab` }}
+          options={{
+            title: label,
+            tabBarLabel: label,
+            tabBarAccessibilityLabel: `${label} tab`,
+          }}
         />
       ))}
     </Tabs>

@@ -1,6 +1,8 @@
 import {
   formatMinorAsDecimal,
   formatMinorCurrency,
+  addMinorUnitAmounts,
+  multiplyMinorUnitsByQuantity,
   parseMoneyToMinorUnits,
 } from '../../shared/domain/money';
 
@@ -41,5 +43,22 @@ describe('money parsing and decimal formatting', () => {
     expect(parseMoneyToMinorUnits('999999999.99')).toBe(99_999_999_999);
     expect(() => parseMoneyToMinorUnits('1000000000.00')).toThrow(RangeError);
     expect(() => parseMoneyToMinorUnits('90071992547409.92')).toThrow(RangeError);
+  });
+});
+
+describe('integer sale amount helpers', () => {
+  it('calculates exact line and sale amounts in kobo', () => {
+    const lineTotal = multiplyMinorUnitsByQuantity(350000, 3);
+    expect(lineTotal).toBe(1050000);
+    expect(addMinorUnitAmounts(0, lineTotal)).toBe(1050000);
+  });
+
+  it('rejects unsafe, fractional, zero and out-of-range operands', () => {
+    expect(() => multiplyMinorUnitsByQuantity(0, 1)).toThrow(RangeError);
+    expect(() => multiplyMinorUnitsByQuantity(100, 0)).toThrow(RangeError);
+    expect(() => multiplyMinorUnitsByQuantity(100, 1.5)).toThrow(RangeError);
+    expect(() => multiplyMinorUnitsByQuantity(Number.MAX_SAFE_INTEGER, 2)).toThrow(RangeError);
+    expect(() => multiplyMinorUnitsByQuantity(99_999_999_999, 2)).toThrow(RangeError);
+    expect(() => addMinorUnitAmounts(99_999_999_999, 1)).toThrow(RangeError);
   });
 });

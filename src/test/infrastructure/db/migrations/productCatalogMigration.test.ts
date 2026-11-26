@@ -7,7 +7,7 @@ import { migrations } from '@/shared/infrastructure/db/migrations';
 import { applyMigrations } from '@/shared/infrastructure/db/migrations/applyMigrations';
 import { productCatalogMigration } from '@/shared/infrastructure/db/migrations/productCatalog';
 import { productSearchNormalizationMigration } from '@/shared/infrastructure/db/migrations/productSearchNormalization';
-// import { localStoreIdentityCurrentMigration } from '@/shared/infrastructure/db/migrations/localStoreIdentityCurrent';
+import { localStoreIdentityCurrentMigration } from '@/shared/infrastructure/db/migrations/localStoreIdentityCurrent';
 import type { DatabaseMigration } from '@/shared/infrastructure/db/migrations/types';
 import { SQLiteTestDatabase } from '@/test/helpers/SQLiteTestDatabase';
 
@@ -30,7 +30,11 @@ describe('product catalog migration', () => {
         PRAGMA user_version = 2;
       `);
 
-      await applyMigrations(database, migrations);
+      await applyMigrations(database, [
+        productCatalogMigration,
+        productSearchNormalizationMigration,
+        localStoreIdentityCurrentMigration,
+      ]);
       const identity = await database.getFirstAsync<{
         store_id: string;
         is_current: number;
@@ -46,7 +50,11 @@ describe('product catalog migration', () => {
       });
       expect(version?.user_version).toBe(3);
 
-      await applyMigrations(database, migrations);
+      await applyMigrations(database, [
+        productCatalogMigration,
+        productSearchNormalizationMigration,
+        localStoreIdentityCurrentMigration,
+      ]);
       expect(
         await database.getFirstAsync<{ count: number }>(
           'SELECT COUNT(*) AS count FROM local_store_identity WHERE is_current = 1;',
@@ -90,7 +98,7 @@ describe('product catalog migration', () => {
         [],
       );
 
-      expect(version?.user_version).toBe(3);
+      expect(version?.user_version).toBe(6);
       expect(journal?.journal_mode.toLowerCase()).toBe('wal');
       expect(foreignKeys?.foreign_keys).toBe(1);
       expect(store).toEqual({
@@ -109,7 +117,7 @@ describe('product catalog migration', () => {
         [],
       );
       expect(stores?.count).toBe(1);
-      expect(repeatedVersion?.user_version).toBe(3);
+      expect(repeatedVersion?.user_version).toBe(6);
     } finally {
       database.close();
       rmSync(directory, { recursive: true, force: true });
@@ -161,7 +169,7 @@ describe('product catalog migration', () => {
         sku_search: 'café-001',
         name_search: 'strasse café',
       });
-      expect(version?.user_version).toBe(3);
+      expect(version?.user_version).toBe(6);
     } finally {
       database.close();
     }

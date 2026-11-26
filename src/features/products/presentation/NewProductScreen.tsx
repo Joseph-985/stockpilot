@@ -1,10 +1,10 @@
-import { Text, View } from 'react-native';
 import { router } from 'expo-router';
+import { Text, View } from 'react-native';
 
+import { Screen } from '@/shared/ui/Screen';
 import { createProduct } from '../application/productUseCases';
 import { ProductForm } from './ProductForm';
 import { useProductServices } from './ProductServicesContext';
-import { Screen } from '@/shared/ui/Screen';
 
 export function NewProductScreen() {
   const { repository, storeId } = useProductServices();
